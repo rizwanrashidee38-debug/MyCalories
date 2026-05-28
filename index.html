@@ -1,5 +1,4 @@
-
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -52,7 +51,7 @@
         .food-item {
             background: #f8f9fa;
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 15px 10px;
             border-radius: 5px;
             text-align: center;
             cursor: pointer;
@@ -62,14 +61,25 @@
             background: #e2e8f0;
             transform: translateY(-2px);
         }
+        .food-name {
+            display: block;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .food-qty {
+            font-size: 0.9em;
+            color: #555;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
         .food-price {
             font-weight: bold;
             color: var(--secondary);
             font-size: 1.1em;
-        }
-        .food-stats {
-            font-size: 0.8em;
-            color: #555;
+            display: block;
         }
         .stat-bar {
             margin: 10px 0;
@@ -104,10 +114,19 @@
             overflow-y: auto;
         }
         .tray-list li {
-            padding: 5px 0;
+            padding: 8px 0;
             border-bottom: 1px solid #eee;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+        .tray-item-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .tray-item-qty {
+            font-size: 0.8em;
+            color: #777;
         }
         #message {
             grid-column: 1 / -1;
@@ -134,7 +153,7 @@
 
     <div class="card">
         <h2>Grocery Shop</h2>
-        <p>Click items to add to your daily diet tray.</p>
+        <p>Click items to add to your daily diet tray. Do you know your macros?</p>
         <div class="food-grid" id="shop-container">
             </div>
     </div>
@@ -199,15 +218,16 @@
         }
     ];
 
+    // Separated names and quantities for a cleaner UI
     const foodDatabase = [
-        { name: "Soya Chunks (50g)", price: 20, protein: 26, calories: 170 },
-        { name: "Eggs (2 pcs)", price: 14, protein: 12, calories: 140 },
-        { name: "Chicken Breast (100g)", price: 60, protein: 31, calories: 165 },
-        { name: "Milk (500ml)", price: 30, protein: 16, calories: 300 },
-        { name: "Lentils/Dal (100g)", price: 15, protein: 24, calories: 350 },
-        { name: "Peanut Butter (30g)", price: 20, protein: 8, calories: 190 },
-        { name: "White Rice (100g)", price: 10, protein: 3, calories: 130 },
-        { name: "Paneer (100g)", price: 40, protein: 18, calories: 265 }
+        { name: "Soya Chunks", qty: "50g", price: 20, protein: 26, calories: 170 },
+        { name: "Eggs", qty: "2 pcs", price: 14, protein: 12, calories: 140 },
+        { name: "Chicken Breast", qty: "100g", price: 60, protein: 31, calories: 165 },
+        { name: "Milk", qty: "500ml", price: 30, protein: 16, calories: 300 },
+        { name: "Lentils/Dal", qty: "100g", price: 15, protein: 24, calories: 350 },
+        { name: "Peanut Butter", qty: "30g", price: 20, protein: 8, calories: 190 },
+        { name: "White Rice", qty: "100g", price: 10, protein: 3, calories: 130 },
+        { name: "Paneer", qty: "100g", price: 40, protein: 18, calories: 265 }
     ];
 
     // --- GAME STATE ---
@@ -234,12 +254,11 @@
         foodDatabase.forEach((food, index) => {
             const div = document.createElement('div');
             div.className = 'food-item';
+            // Notice: Protein and calories are no longer displayed here
             div.innerHTML = `
-                <strong>${food.name}</strong><br>
-                <span class="food-price">₹${food.price}</span><br>
-                <div class="food-stats">
-                    ${food.protein}g Protein | ${food.calories} kcal
-                </div>
+                <strong class="food-name">${food.name}</strong>
+                <span class="food-qty">${food.qty}</span>
+                <span class="food-price">₹${food.price}</span>
             `;
             div.onclick = () => buyFood(index);
             elShop.appendChild(div);
@@ -309,7 +328,13 @@
         elTray.innerHTML = '';
         tray.forEach((item, index) => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>${item.name}</span> <span>₹${item.price}</span>`;
+            li.innerHTML = `
+                <div class="tray-item-info">
+                    <strong>${item.name}</strong>
+                    <span class="tray-item-qty">${item.qty}</span>
+                </div>
+                <span>₹${item.price}</span>
+            `;
             elTray.appendChild(li);
         });
     }
@@ -344,3 +369,4 @@
 
 </body>
 </html>
+                          
