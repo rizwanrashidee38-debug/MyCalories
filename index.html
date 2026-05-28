@@ -1,1 +1,346 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition Budget Challenge</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --danger: #e74c3c;
+            --bg: #ecf0f1;
+            --card: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        header {
+            grid-column: 1 / -1;
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2, h3 { margin-top: 0; }
+        .food-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .food-item {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .food-item:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        .food-price {
+            font-weight: bold;
+            color: var(--secondary);
+            font-size: 1.1em;
+        }
+        .food-stats {
+            font-size: 0.8em;
+            color: #555;
+        }
+        .stat-bar {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: #eee;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+        }
+        .budget-stat { background: #d4edda; color: #155724; }
+        .budget-stat.danger { background: #f8d7da; color: #721c24; }
+        .protein-stat { background: #cce5ff; color: #004085; }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            color: white;
+        }
+        .btn-submit { background: var(--secondary); }
+        .btn-submit:hover { background: #219150; }
+        .btn-reset { background: var(--danger); }
+        .btn-reset:hover { background: #c0392b; }
+        .tray-list {
+            list-style-type: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .tray-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        #message {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Nutrition Budget Challenge</h1>
+        <p id="level-title">Level 1</p>
+    </header>
+
+    <div id="message"></div>
+
+    <div class="card">
+        <h2>Grocery Shop</h2>
+        <p>Click items to add to your daily diet tray.</p>
+        <div class="food-grid" id="shop-container">
+            </div>
+    </div>
+
+    <div class="card">
+        <h2>Current Task</h2>
+        <p id="task-desc">Loading task...</p>
+        
+        <h3>Goals:</h3>
+        <ul>
+            <li>Min Protein: <span id="target-protein">0</span>g</li>
+            <li>Min Calories: <span id="target-calories">0</span> kcal</li>
+            <li>Max Budget: ₹<span id="target-budget">0</span></li>
+        </ul>
+
+        <h3>Your Tray Stats</h3>
+        <div class="stat-bar budget-stat" id="budget-bar">
+            <span>Budget Left:</span>
+            <span>₹<span id="current-budget">0</span></span>
+        </div>
+        <div class="stat-bar protein-stat">
+            <span>Protein Gathered:</span>
+            <span><span id="current-protein">0</span>g</span>
+        </div>
+        <div class="stat-bar">
+            <span>Calories Gathered:</span>
+            <span><span id="current-calories">0</span> kcal</span>
+        </div>
+
+        <h3>Items in Tray</h3>
+        <ul class="tray-list" id="tray-container">
+            </ul>
+
+        <button class="btn btn-submit" onclick="checkWin()">Submit Diet Plan</button>
+        <button class="btn btn-reset" onclick="resetTray()">Clear Tray</button>
+    </div>
+</div>
+
+<script>
+    // --- GAME DATA ---
+    const tasks = [
+        {
+            level: 1,
+            description: "An 85 kg man (5.5 ft height) needs to hit his daily protein goal. Provide him with enough nutrients!",
+            budget: 200,
+            targetProtein: 110,
+            targetCalories: 1500
+        },
+        {
+            level: 2,
+            description: "A college student wants to build muscle but is totally broke. Feed him!",
+            budget: 100,
+            targetProtein: 70,
+            targetCalories: 1200
+        },
+        {
+            level: 3,
+            description: "A marathon runner needs huge calories and decent protein for recovery.",
+            budget: 350,
+            targetProtein: 90,
+            targetCalories: 2500
+        }
+    ];
+
+    const foodDatabase = [
+        { name: "Soya Chunks (50g)", price: 20, protein: 26, calories: 170 },
+        { name: "Eggs (2 pcs)", price: 14, protein: 12, calories: 140 },
+        { name: "Chicken Breast (100g)", price: 60, protein: 31, calories: 165 },
+        { name: "Milk (500ml)", price: 30, protein: 16, calories: 300 },
+        { name: "Lentils/Dal (100g)", price: 15, protein: 24, calories: 350 },
+        { name: "Peanut Butter (30g)", price: 20, protein: 8, calories: 190 },
+        { name: "White Rice (100g)", price: 10, protein: 3, calories: 130 },
+        { name: "Paneer (100g)", price: 40, protein: 18, calories: 265 }
+    ];
+
+    // --- GAME STATE ---
+    let currentTaskIndex = 0;
+    let tray = [];
+    let currentBudgetLeft = 0;
+    let currentProtein = 0;
+    let currentCalories = 0;
+
+    // --- DOM ELEMENTS ---
+    const elShop = document.getElementById('shop-container');
+    const elTray = document.getElementById('tray-container');
+    const elMessage = document.getElementById('message');
+    const elBudgetBar = document.getElementById('budget-bar');
+
+    // --- FUNCTIONS ---
+    function initGame() {
+        renderShop();
+        loadTask(currentTaskIndex);
+    }
+
+    function renderShop() {
+        elShop.innerHTML = '';
+        foodDatabase.forEach((food, index) => {
+            const div = document.createElement('div');
+            div.className = 'food-item';
+            div.innerHTML = `
+                <strong>${food.name}</strong><br>
+                <span class="food-price">₹${food.price}</span><br>
+                <div class="food-stats">
+                    ${food.protein}g Protein | ${food.calories} kcal
+                </div>
+            `;
+            div.onclick = () => buyFood(index);
+            elShop.appendChild(div);
+        });
+    }
+
+    function loadTask(index) {
+        if (index >= tasks.length) {
+            showMessage("🎉 You beat all levels! You are a master nutritionist!", "success");
+            return;
+        }
+
+        const task = tasks[index];
+        document.getElementById('level-title').innerText = `Level ${task.level}`;
+        document.getElementById('task-desc').innerText = task.description;
+        document.getElementById('target-protein').innerText = task.targetProtein;
+        document.getElementById('target-calories').innerText = task.targetCalories;
+        document.getElementById('target-budget').innerText = task.budget;
+        
+        resetTray();
+    }
+
+    function buyFood(foodIndex) {
+        const food = foodDatabase[foodIndex];
+        tray.push(food);
+        updateStats();
+        renderTray();
+    }
+
+    function resetTray() {
+        tray = [];
+        updateStats();
+        renderTray();
+        elMessage.style.display = 'none';
+    }
+
+    function updateStats() {
+        const task = tasks[currentTaskIndex];
+        
+        // Calculate totals
+        let spent = 0;
+        currentProtein = 0;
+        currentCalories = 0;
+
+        tray.forEach(item => {
+            spent += item.price;
+            currentProtein += item.protein;
+            currentCalories += item.calories;
+        });
+
+        currentBudgetLeft = task.budget - spent;
+
+        // Update UI
+        document.getElementById('current-budget').innerText = currentBudgetLeft;
+        document.getElementById('current-protein').innerText = currentProtein;
+        document.getElementById('current-calories').innerText = currentCalories;
+
+        // Budget warning color
+        if (currentBudgetLeft < 0) {
+            elBudgetBar.classList.add('danger');
+        } else {
+            elBudgetBar.classList.remove('danger');
+        }
+    }
+
+    function renderTray() {
+        elTray.innerHTML = '';
+        tray.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${item.name}</span> <span>₹${item.price}</span>`;
+            elTray.appendChild(li);
+        });
+    }
+
+    function checkWin() {
+        const task = tasks[currentTaskIndex];
+        
+        if (currentBudgetLeft < 0) {
+            showMessage("Failed! You went over budget. Try clearing your tray and starting again.", "error");
+        } else if (currentProtein < task.targetProtein) {
+            showMessage(`Failed! You need ${task.targetProtein - currentProtein}g more protein!`, "error");
+        } else if (currentCalories < task.targetCalories) {
+            showMessage(`Failed! You need ${task.targetCalories - currentCalories} more calories!`, "error");
+        } else {
+            showMessage("Success! You met the nutritional needs within budget! Loading next level...", "success");
+            setTimeout(() => {
+                currentTaskIndex++;
+                loadTask(currentTaskIndex);
+            }, 2500);
+        }
+    }
+
+    function showMessage(text, type) {
+        elMessage.innerText = text;
+        elMessage.className = type;
+        elMessage.style.display = 'block';
+    }
+
+    // Start the game
+    initGame();
+</script>
+
+</body>
+</html>
